@@ -65,11 +65,19 @@ jobs:
           sarif_file: agent/results.sarif
 
   test_charm:
-    name: Run charm unit tests
+    name: Run charm unit tests (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
     defaults:
       run:
         working-directory: agent/charms/testflinger-agent-host-charm
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -83,11 +91,19 @@ jobs:
       - run: just test
 
   test_charm_integration:
-    name: Run charm integration tests
+    name: Run charm integration tests (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
     defaults:
       run:
         working-directory: agent/charms/testflinger-agent-host-charm
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -97,12 +113,15 @@ jobs:
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
       - run: sudo snap install --classic just
       - run: just --yes setup
-      - run: just integration --juju-dump-logs logs
+      - run: charmcraft pack --platform ${{ matrix.arch }} --use-lxd
+      - run: uvx tox run -e integration -- --juju-dump-logs logs
+        env:
+          CHARM_PATH: ${{ github.workspace }}/agent/charms/testflinger-agent-host-charm/testflinger-agent-host_${{ matrix.arch }}.charm
       - name: Upload charm as an artifact
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: agent-charm
+          name: agent-charm-${{ matrix.arch }}
           path: agent/charms/testflinger-agent-host-charm/*.charm
           if-no-files-found: error
           retention-days: 2
@@ -110,6 +129,6 @@ jobs:
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: juju-dump-logs
+          name: juju-dump-logs-${{ matrix.arch }}
           path: agent/charms/testflinger-agent-host-charm/logs
           retention-days: 2
