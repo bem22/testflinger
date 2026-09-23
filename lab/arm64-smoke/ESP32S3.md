@@ -62,8 +62,25 @@ Wait for server-side registration on the new queue before submitting
    expected chip/MAC transcript and success marker.
 4. Successful container removal, both agents waiting, and a second successful job.
 
-End-to-end queued hardware validation is pending. Only the manual Docker probe
-has passed so far. Firmware flashing remains out of scope.
+## Queued hardware validation (2026-09-23)
+
+First job: `fa61aa22-81aa-4f82-af22-d43419b237ef`.
+It reached `complete` with setup/test/cleanup status 0, reported
+`ESP32S3_IDENTITY_PASS`, and uploaded both expected artifacts. The transcript
+identified ESP32-S3 QFN56 revision v0.2 and MAC `e8:f6:0a:81:84:84`.
+Cleanup reported removal of the named container and agent 01 returned to waiting.
+
+Repeat job `45fbde55-4e2c-4d8b-8e6f-26debe8de409` also completed with
+setup/test/cleanup status 0. Both downloaded artifacts again contained the
+expected identity and success marker. This demonstrates consecutive queued
+probes with container-name reuse and the board initially left in its bootloader.
+Both agents were confirmed waiting afterward; agent 02 remained unchanged.
+
+The tested wrapper revision was `924b5483`. No flash or eFuse write was requested.
+The board remains in its bootloader. Firmware flashing, application serial
+output, physical USB hotplug, and automatic recovery from a disconnected board
+remain unvalidated. Container removal was reported by cleanup; a direct
+post-test Docker listing has not been collected.
 
 ## Rollback
 
