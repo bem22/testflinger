@@ -2,6 +2,7 @@
 # See LICENSE file for licensing details.
 """Integration tests for the charm."""
 
+import json
 import platform
 from pathlib import Path
 
@@ -38,9 +39,9 @@ def test_deploy(charm_path: Path, juju: jubilant.Juju):
         charm_path.resolve(), app=APP_NAME, constraints={"arch": NATIVE_ARCH}
     )
     juju.config(APP_NAME, TEST_CONFIG_01)
-    # Wait for install to complete, charm should be in BlockedStatus due to
-    # missing credentials.
-    juju.wait(jubilant.all_blocked, timeout=60 * 5)
+    # Include cold image provisioning and snap/package installation on SD
+    # storage. The charm should then block due to missing credentials.
+    juju.wait(jubilant.all_blocked, timeout=60 * 20)
 
     # Create mock token to skip authentication
     create_mock_token(juju, APP_NAME)
@@ -80,21 +81,30 @@ def test_update_testflinger_action(juju: jubilant.Juju):
     assert action.status == "completed"
     assert action.return_code == 0
 
-    # Ensure that Testflinger packages are installed properly
-    pip_freeze = juju.exec(
-        f"{VIRTUAL_ENV_PATH}/bin/pip3", "freeze", unit=f"{APP_NAME}/0"
-    )
-    assert pip_freeze.return_code == 0
-
-    for package, path in (
+    packages = (
         ("testflinger-common", "common"),
         ("testflinger-agent", "agent"),
         ("testflinger-device-connectors", "device-connectors"),
-    ):
-        assert (
-            f"{package} @ file://{LOCAL_TESTFLINGER_PATH}/{path}"
-            in pip_freeze.stdout
-        )
+    )
+    # pip freeze may render a local editable install as a Git URL. Check
+    # PEP 610 metadata instead, retaining the local-source provenance check.
+    metadata = juju.exec(
+        f"{VIRTUAL_ENV_PATH}/bin/python3",
+        "-c",
+        "import json, sys; from importlib.metadata import distribution; "
+        "print(json.dumps({name: json.loads("
+        "distribution(name).read_text('direct_url.json') or 'null') "
+        "for name in sys.argv[1:]}))",
+        *(package for package, _ in packages),
+        unit=f"{APP_NAME}/0",
+    )
+    assert metadata.return_code == 0
+    installed_sources = json.loads(metadata.stdout)
+    for package, path in packages:
+        source = installed_sources[package]
+        assert isinstance(source, dict), f"Missing source metadata: {package}"
+        expected_url = (Path(LOCAL_TESTFLINGER_PATH) / path).as_uri()
+        assert source.get("url") == expected_url, (package, source)
 
 
 def test_update_testflinger_action_with_branch(juju: jubilant.Juju):
