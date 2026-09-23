@@ -1,18 +1,24 @@
-# Runs inside upstream's testenv container via the noprovision runtest stage.
-job_queue: pi5-upstream-docker-smoke-01
+# Reads identity only; resets into download mode and leaves the board there.
+job_queue: pi5-esp32s3-identity-01
 test_data:
   test_cmds: |
-    set -eu
+    #!/bin/bash
+    set -euo pipefail
     test -f /.dockerenv
     test "$(uname -m)" = aarch64
     test "$(dpkg --print-architecture)" = arm64
     test "$(id -un)" = ubuntu
     test "$AGENT_NAME" = pi5-upstream-01
-    echo upstream-docker-smoke-agent-01
-    hostname
-    uname -m
-    dpkg --print-architecture
-    id
-    sudo -n uv --version
+    test -c /dev/esp32s3
     mkdir -p artifacts
-    printf 'upstream-docker-smoke-agent-01\naarch64\n' > artifacts/docker-smoke.txt
+    timeout 60s esptool.py \
+      --chip esp32s3 \
+      --port /dev/esp32s3 \
+      --baud 115200 \
+      --before usb_reset \
+      --after no_reset \
+      --no-stub \
+      read_mac 2>&1 | tee artifacts/esp32s3-identity.txt
+    grep -Eq '^Chip is ESP32-S3([[:space:]]|$)' artifacts/esp32s3-identity.txt
+    grep -Fxq 'MAC: e8:f6:0a:81:84:84' artifacts/esp32s3-identity.txt
+    echo ESP32S3_IDENTITY_PASS | tee artifacts/identity-status.txt
