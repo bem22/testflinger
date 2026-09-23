@@ -1,8 +1,8 @@
 # Live ARM64 upstream charm Docker smoke configuration
 
-> This branch now selects the ESP32-S3 identity test for agent 01. Follow
-> [ESP32S3.md](ESP32S3.md) for current deployment inputs, safety notes, and the
-> dedicated hardware queue. The Docker-only baseline below is historical.
+> This branch selects firmware replacement and serial validation for agent 01.
+> Follow [FLASH-HELLO.md](FLASH-HELLO.md) for activation and safety notes.
+> The identity-only and Docker-only configurations are historical baselines.
 
 Lab-only configuration on `lab/arm64-docker-smoke-config`, separate from the
 `feat/agent-host-arm64` contribution branch. This is not an additional charm.

@@ -1,0 +1,7 @@
+{
+  "job_queue": "pi5-esp32s3-flash-hello-01",
+  "test_data": {
+    "test_cmds": "CONFIRM_FLASH e8:f6:0a:81:84:84",
+    "attachments": [{"agent": "flasher_args.json"}]
+  }
+}
