@@ -1,4 +1,18 @@
-# The agent executes its fixed smoke command, not test_data.test_cmds.
-job_queue: pi5-upstream-smoke-01
+# Runs inside upstream's testenv container via the noprovision runtest stage.
+job_queue: pi5-upstream-docker-smoke-01
 test_data:
-  test_cmds: "echo placeholder-not-executed"
+  test_cmds: |
+    set -eu
+    test -f /.dockerenv
+    test "$(uname -m)" = aarch64
+    test "$(dpkg --print-architecture)" = arm64
+    test "$(id -un)" = ubuntu
+    test "$AGENT_NAME" = pi5-upstream-01
+    echo upstream-docker-smoke-agent-01
+    hostname
+    uname -m
+    dpkg --print-architecture
+    id
+    sudo -n uv --version
+    mkdir -p artifacts
+    printf 'upstream-docker-smoke-agent-01\naarch64\n' > artifacts/docker-smoke.txt
