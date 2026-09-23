@@ -1,0 +1,4 @@
+# The agent executes its fixed smoke command, not test_data.test_cmds.
+job_queue: pi5-upstream-smoke-02
+test_data:
+  test_cmds: "echo placeholder-not-executed"
