@@ -86,7 +86,23 @@ The Pi guest also ran the Jammy Docker image as ubuntu on ARM64, with
 `sudo -n uv --version` reporting uv 0.12.17. Image digest observed:
 `sha256:a9ac9063e441bf54f30feb4ceaaa99423aac0329483bc6046f3d2c593c07bf52`.
 The upstream helper uses the mutable `jammy` tag, not a pinned digest.
-End-to-end Docker job and artifact validation are still pending.
+Two consecutive end-to-end Docker jobs passed on 2026-09-23:
+
+- First: `ccd431d1-8afb-4420-9d8d-46745d30f8ac`
+- Repeat: `0f7bad91-6766-47a1-846c-5b234e7c6a9f`
+
+Both reached `complete` with setup/test/cleanup status 0. The test assertions
+confirmed Docker, ARM64, the ubuntu user, and connector-provided agent identity.
+Both artifact archives contained `artifacts/docker-smoke.txt` with the expected
+marker and architecture. Cleanup output reported removal of `pi5-upstream-01`;
+the second run successfully reused the name with a different container hostname.
+Both agents returned to waiting. A direct post-test Docker container listing
+has not been collected. Agent 02 was unchanged and waiting, not retested here.
+
+Submission and result/artifact retrieval used this lab's permitted anonymous
+contributor API access. The saved CLI agent-role login cannot submit jobs or
+download artifacts; no account roles or saved credentials were changed.
+USB passthrough, MCU flashing, and hardware tests remain unvalidated.
 
 ## Retiring the old prototype
 
