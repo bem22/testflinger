@@ -1,7 +1,9 @@
 """Offline guards and sequencing tests. Never opens a physical device."""
 
+import ast
 import json
 from pathlib import Path
+import tarfile
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -33,6 +35,26 @@ class FlashTests(unittest.TestCase):
     def test_real_bundle(self):
         args = hello.validate_bundle(BUILD)
         self.assertEqual(args[::2], ["0x0", "0x8000", "0x10000"])
+
+    @unittest.skipUnless((BUILD / "testflinger-attachments-v2.tar.gz").exists(), "Local archive needed")
+    def test_agent_attachment_filter(self):
+        # Execute the exact filter without importing the agent's unrelated services.
+        repo = Path(__file__).resolve().parents[4]
+        source = (repo / "agent/src/testflinger_agent/agent.py").read_text()
+        tree = ast.parse(source)
+        function = next(node for node in tree.body
+                        if isinstance(node, ast.FunctionDef) and node.name == "secure_filter")
+        namespace = {"Path": Path, "tarfile": tarfile}
+        exec(compile(ast.Module(body=[function], type_ignores=[]), "agent_filter", "exec"), namespace)
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory)
+            with tarfile.open(BUILD / "esp32s3-hello-v1.tar.gz") as archive:
+                with self.assertRaises(tarfile.OutsideDestinationError):
+                    archive.extractall(destination, filter=namespace["secure_filter"])
+            with tarfile.open(BUILD / "testflinger-attachments-v2.tar.gz") as archive:
+                archive.extractall(destination, filter=namespace["secure_filter"])
+            args = hello.validate_bundle(destination / "test")
+            self.assertEqual(args[::2], ["0x0", "0x8000", "0x10000"])
 
     def test_bad_layout_and_hash(self):
         with tempfile.TemporaryDirectory() as directory:

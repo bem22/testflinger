@@ -10,7 +10,7 @@ import sys
 import time
 
 MAC = "e8:f6:0a:81:84:84"
-QUEUE = "pi5-esp32s3-flash-hello-01"
+QUEUE = "pi5-esp32s3-flash-hello-v2-01"
 PORT = "/dev/esp32s3"
 FLASH_FILES = {
     "0x0": "bootloader/bootloader.bin",
@@ -142,7 +142,7 @@ def main() -> int:
         if os.getuid() != 1000 or not Path("/.dockerenv").exists():
             raise RuntimeError("Run only as ubuntu in the designated test container")
         validate_job(json.loads(Path("testflinger.json").read_text()))
-        flash_files = validate_bundle(Path("attachments"))
+        flash_files = validate_bundle(Path("attachments/test"))
         (artifacts / "firmware-hashes.json").write_text(json.dumps(HASHES, indent=2) + "\n")
         stage = "identity"
         validate_identity(run_tool(["read_mac"], artifacts / "identity.log", 60))

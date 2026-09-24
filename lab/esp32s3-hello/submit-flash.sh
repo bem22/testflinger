@@ -3,17 +3,17 @@
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")"
 server=http://testflinger.local
-bundle=build/esp32s3-hello-v1.tar.gz
+bundle=build/testflinger-attachments-v2.tar.gz
 job=../arm64-smoke/jobs/flash-hello.json
-receipt=build/flash-job-id.txt
+receipt=build/flash-job-v2-id.txt
 
 if [[ -e $receipt ]]; then
     echo "A submission receipt already exists: $receipt. Inspect that job; do not blindly reflash." >&2
     exit 2
 fi
-printf '%s  %s\n' c237b999de5a413cdcaed912d9aa81f3fffab3239e938e09bc31d18735234c57 "$bundle" | sha256sum --check --strict
+printf '%s  %s\n' dafe828f894566b81f0e17f20b7f298f32602eabe5e742dfa672f8e7f32dcab0 "$bundle" | sha256sum --check --strict
 curl -fsS --max-time 15 "$server/v1/agents/data/pi5-upstream-01" |
-    jq -e '.state == "waiting" and (.queues | index("pi5-esp32s3-flash-hello-01") != null)' >/dev/null
+    jq -e '.state == "waiting" and (.queues | index("pi5-esp32s3-flash-hello-v2-01") != null)' >/dev/null
 
 # No retry on submission: an ambiguous network failure might already have created a job.
 response=$(curl -fsS --max-time 30 -H 'Content-Type: application/json' \

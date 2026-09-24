@@ -1,7 +1,7 @@
 # ESP32-S3-Zero flash and serial validation (lab only)
 
-Branch `lab/esp32s3-flash-hello-config` changes agent 01's queue to
-`pi5-esp32s3-flash-hello-01`. Agent 02 is unchanged. This is NOT the identity-only
+Branch `lab/esp32s3-flash-hello-v2-config` changes agent 01's queue to
+`pi5-esp32s3-flash-hello-v2-01`. Agent 02 is unchanged. This is NOT the identity-only
 configuration: it can overwrite the selected board's installed firmware.
 The user authorized replacement without a backup.
 
@@ -22,8 +22,10 @@ Flash programming necessarily erases the sectors occupied by the new images.
 An interrupted flash can leave the board unable to boot until reflashed.
 
 Input is the [validated firmware bundle](../esp32s3-hello/BUILD-VALIDATION.md).
-The existing archive must be uploaded directly as Testflinger's attachment archive,
-so its files appear immediately under `attachments/`, not inside a nested tarball.
+The raw firmware archive is NOT a valid Testflinger attachment archive. Upload
+`build/testflinger-attachments-v2.tar.gz`, whose members have a `test/` prefix,
+so its files appear under `attachments/test/`, not inside a nested tarball.
+Its SHA-256 is `dafe828f894566b81f0e17f20b7f298f32602eabe5e742dfa672f8e7f32dcab0`.
 The JSON job file is an API submission template, NOT a CLI auto-packaging recipe.
 The attachment entry tells the server to hold the job pending attachment upload.
 Upload the bundle with multipart field `file` using POST to
@@ -32,7 +34,7 @@ Upload the bundle with multipart field `file` using POST to
 ## Activation on the Pi
 
 When both agents are waiting and queues empty, change `agent-host` in model
-`upstream-testflinger-arm64` to `config-branch=lab/esp32s3-flash-hello-config`.
+`upstream-testflinger-arm64` to `config-branch=lab/esp32s3-flash-hello-v2-config`.
 Keep `config-dir` unchanged. Both agents restart. The existing LXD serial mapping
 must still point to the selected S3. Close serial monitors and manual probes.
 Source is delivered by the config repository; no charm rebuild is necessary.
@@ -62,3 +64,13 @@ receipt exists; no automatic retry is made on an ambiguous submission failure.
 
 Hardware execution of this flash workflow is pending. Offline tests cannot prove
 ROM flash commands, reset, or serial re-enumeration behavior.
+
+## First submission: attachment failure before flashing
+
+Job `f1a9e129-7d6f-42b0-970e-6da00c3265de` completed with cleanup only and
+"No such container"; setup/test never ran. The original archive had root-level
+members, which the agent's `secure_filter` rejects before running phases. A
+regression test now reproduces that rejection and extracts the corrected archive
+with the actual filter function from the checked-out agent source. Binary hashes
+remain unchanged. The original submission receipt is retained; v2 uses a separate
+queue and receipt so it cannot run against an uncorrected deployed configuration.
