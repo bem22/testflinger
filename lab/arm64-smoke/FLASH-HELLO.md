@@ -62,8 +62,8 @@ The laptop submission helper verifies the bundle hash and waiting/new-queue stat
 records the job ID, then uploads the archive. It refuses to resubmit when that
 receipt exists; no automatic retry is made on an ambiguous submission failure.
 
-Hardware execution of this flash workflow is pending. Offline tests cannot prove
-ROM flash commands, reset, or serial re-enumeration behavior.
+Hardware execution passed as recorded below. Physical unplug/replug and recovery
+after a changed device major/minor remain untested.
 
 ## First submission: attachment failure before flashing
 
@@ -74,3 +74,25 @@ regression test now reproduces that rejection and extracts the corrected archive
 with the actual filter function from the checked-out agent source. Binary hashes
 remain unchanged. The original submission receipt is retained; v2 uses a separate
 queue and receipt so it cannot run against an uncorrected deployed configuration.
+
+## Successful live validation — 2026-09-24
+
+- Job: `b86c6d92-782f-42a8-95fb-6535d3b9c74f`.
+- Tested config commit: `98a83e8e`, queue `pi5-esp32s3-flash-hello-v2-01`.
+- Result: `complete`; setup, test, and cleanup exit statuses all `0`.
+- Target: ESP32-S3 revision v0.2, MAC `e8:f6:0a:81:84:84`.
+- One write operation programmed bootloader, partition table, and application.
+- Separate verification reported `verify OK (digest matched)` for all three images.
+- Explicit USB-aware reset booted ESP-IDF v5.5.3, project `tf_s3_hello` v1.0.0.
+- Serial captured `Hello world from ESP32-S3-Zero!`.
+- Matching-MAC `TF_ESP32S3_HELLO_V1_PASS` counters: `0`, `1`, and `2`.
+- Final marker: `ESP32S3_FLASH_HELLO_PASS`.
+- Downloaded artifacts independently checked: all logs, hashes, and result JSON.
+- Artifact result JSON reported `status: pass` and the expected MAC.
+- Cleanup removed the named Docker container; both agents returned to `waiting`.
+- Agent 02 retained its native smoke queue. No backup was taken, as requested.
+
+The board now contains the hello firmware. Do not resubmit merely to read serial
+output: this queue performs firmware writes. The v2 submission receipt is kept
+locally to prevent accidental repeat submission. Config remains on the v2 flash
+branch; no automatic rollback or additional hardware job was performed.
