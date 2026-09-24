@@ -1,0 +1,16 @@
+# Submitting this job replaces firmware on the selected ESP32-S3. No backup.
+# All local paths are relative to THIS YAML file, not your terminal directory.
+job_queue: pi5-esp32s3-flash-hello-v2-01
+test_data:
+  test_cmds: "CONFIRM_FLASH e8:f6:0a:81:84:84"
+  attachments:
+    - local: build/bootloader/bootloader.bin
+      agent: bootloader/bootloader.bin
+    - local: build/partition_table/partition-table.bin
+      agent: partition_table/partition-table.bin
+    - local: build/tf_s3_hello.bin
+      agent: tf_s3_hello.bin
+    - local: build/flasher_args.json
+      agent: flasher_args.json
+    - local: build/flash_args
+      agent: flash_args
