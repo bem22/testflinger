@@ -2,6 +2,12 @@ name: Workshop ESP32-S3 build
 
 on:
   workflow_dispatch:
+    inputs:
+      flash_and_test:
+        description: Replace ESP32-S3 firmware and verify MAC/nonce serial proof
+        type: boolean
+        required: true
+        default: false
 
 permissions:
   contents: read
@@ -33,7 +39,19 @@ jobs:
           [[ -z "$(git status --porcelain --untracked-files=normal)" ]]
           export PATH="/snap/bin:$PATH"
           bash lab/esp32s3-hello/build-workshop-ci.sh
+      - name: Flash once and verify hardware proof
+        if: ${{ inputs.flash_and_test }}
+        shell: bash
+        env:
+          BUNDLE: ${{ steps.firmware.outputs.bundle }}
+        run: |
+          set -euo pipefail
+          cd "$HOME/code/testflinger-workshop-demo"
+          [[ "$(git rev-parse HEAD)" == "$GITHUB_SHA" ]]
+          [[ -z "$(git status --porcelain --untracked-files=normal)" ]]
+          "$HOME/code/tf-venv/.venv/bin/python" lab/esp32s3-hello/ci_flash_test.py "$BUNDLE"
       - name: Archive firmware and manifest (no credentials or old receipts)
+        if: ${{ always() && steps.firmware.outcome == 'success' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: esp32s3-${{ github.run_id }}-${{ github.run_attempt }}
