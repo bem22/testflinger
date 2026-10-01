@@ -1,0 +1,42 @@
+name: Workshop ESP32-S3 build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: workshop-esp32s3-lab
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: >-
+      github.repository == 'bem22/testflinger' &&
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/lab/workshop-esp32s3-build'
+    runs-on: [self-hosted, Linux, X64, workshop-esp32s3]
+    timeout-minutes: 30
+    steps:
+      # No checkout: Workshop already mounts this dedicated host worktree.
+      # Refuse stale/dirty source rather than resetting or overwriting it.
+      - name: Verify host checkout and build selected commit
+        id: firmware
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$RUNNER_NAME" == freertos-demo ]]
+          cd "$HOME/code/testflinger-workshop-demo"
+          [[ "$(git branch --show-current)" == lab/workshop-esp32s3-build ]]
+          [[ "$(git rev-parse HEAD)" == "$GITHUB_SHA" ]]
+          [[ -z "$(git status --porcelain --untracked-files=normal)" ]]
+          export PATH="/snap/bin:$PATH"
+          bash lab/esp32s3-hello/build-workshop-ci.sh
+      - name: Archive firmware and manifest (no credentials or old receipts)
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: esp32s3-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ steps.firmware.outputs.bundle }}
+          if-no-files-found: error
+          retention-days: 14
