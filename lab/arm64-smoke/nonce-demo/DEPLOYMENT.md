@@ -5,7 +5,7 @@ build branch, its canonical agent configuration is intended for deployment.
 Agent 02's configuration is unchanged. The opt-in implementation and historical
 readiness notes are in README.md; this document describes the deployment delta.
 
-- Config repository: https://github.com/bem22/testflinger.git
+- Config repository: <https://github.com/bem22/testflinger.git>
 - Deployment branch: `lab/workshop-esp32s3-nonce-config`
 - Config directory: `lab/arm64-smoke/agents`
 - Target: `agent-host` in Pi model `upstream-testflinger-arm64`
