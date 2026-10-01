@@ -2,3 +2,5 @@
 /sdkconfig
 /sdkconfig.old
 /managed_components/
+/.workshop.lock
+/__pycache__/

@@ -6,6 +6,10 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+#ifdef TF_BUILD_PROOF
+#include "tf_build_identity.h"
+#endif
+
 void app_main(void)
 {
     uint8_t mac[6];
@@ -17,8 +21,13 @@ void app_main(void)
      */
     for (uint32_t sequence = 0;; ++sequence) {
         printf("Hello world from ESP32-S3-Zero!\n");
+#ifdef TF_BUILD_PROOF
+        printf("TF_ESP32S3_HELLO_V2_PASS mac=" MACSTR " nonce=%s seq=%" PRIu32 "\n",
+               MAC2STR(mac), TF_BUILD_NONCE, sequence);
+#else
         printf("TF_ESP32S3_HELLO_V1_PASS mac=" MACSTR " seq=%" PRIu32 "\n",
                MAC2STR(mac), sequence);
+#endif
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }

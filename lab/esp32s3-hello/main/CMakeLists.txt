@@ -1,1 +1,8 @@
 idf_component_register(SRCS "hello.c" INCLUDE_DIRS ".")
+if(DEFINED TF_BUILD_IDENTITY_DIR)
+	if(NOT EXISTS "${TF_BUILD_IDENTITY_DIR}/tf_build_identity.h")
+		message(FATAL_ERROR "Build identity header is missing; run the Workshop build action")
+	endif()
+	target_include_directories(${COMPONENT_LIB} PRIVATE "${TF_BUILD_IDENTITY_DIR}")
+	target_compile_definitions(${COMPONENT_LIB} PRIVATE TF_BUILD_PROOF=1)
+endif()

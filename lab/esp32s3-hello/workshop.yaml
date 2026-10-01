@@ -1,0 +1,11 @@
+name: esp32s3-build
+base: ubuntu@24.04
+sdks:
+  # The local ESP-IDF SDK's setup-project hook needs uv on PATH.
+  - name: project-build-prereqs
+  # Local SDK installed by sdkcraft try from freertos-esp-sdk.
+  - name: try-freertos-esp-idf
+
+actions:
+  build: |
+    bash /project/build-workshop.sh

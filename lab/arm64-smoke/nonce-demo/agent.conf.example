@@ -1,0 +1,16 @@
+# Candidate replacement for agent 01 ONLY, after it is idle and stopped.
+# Do not start a second agent against /dev/esp32s3.
+agent_id: pi5-upstream-01
+server_address: http://testflinger.local
+logging_level: INFO
+polling_interval: 10
+job_queues:
+  - pi5-esp32s3-workshop-nonce-01
+execution_basedir: /home/ubuntu/testflinger-smoke/pi5-upstream-01/run
+results_basedir: /home/ubuntu/testflinger-smoke/pi5-upstream-01/results
+logging_basedir: /home/ubuntu/testflinger-smoke/pi5-upstream-01/logs
+provision_type: noprovision
+setup_command: /bin/true
+provision_command: /bin/true
+test_command: /bin/bash /srv/agent-configs/lab/arm64-smoke/scripts/tf-test-esp32s3-nonce.sh
+cleanup_command: /usr/local/bin/tf-cleanup
